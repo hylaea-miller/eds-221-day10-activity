@@ -1,0 +1,97 @@
+---
+title: "day10_practice"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+library(lubridate)
+library(dplyr)
+```
+
+```{r}
+meteorological_data <- read.csv(here("data", "ntl20_v6.csv")) %>% clean_names()
+```
+
+```{r}
+madison_lake <- read.csv(here("data", "ntl33_v7.csv")) %>%  clean_names()
+```
+
+\### group by summarize
+
+```{r}
+ 
+ summarize_lake <- madison_lake %>% 
+   filter(ice_duration != "-999")
+```
+
+```{r}
+names(madison_lake)
+```
+
+```{r}
+ggplot() +
+  geom_jitter(data = summarize_lake, aes(year4, ice_duration))
+  
+```
+
+```{r}
+mean_lake <- summarize_lake %>% 
+   group_by(year4) %>% 
+  summarise(mean_cover = mean(ice_duration, na.rm = T))
+```
+
+```{r}
+ggplot() +
+  geom_point(data = mean_lake, aes(year4, mean_cover))
+```
+
+The mean ice cover have been decreasing over the years
+
+
+```{r}
+
+met <- meteorological_data %>% 
+  filter(month == c(1, 2, 12)) %>% 
+   group_by(year4) %>% 
+  summarise(mean_air_temp = mean(ave_air_temp_adjusted, na.rm = T))
+```
+
+
+```{r}
+ggplot() +
+  geom_jitter(data = met, aes(year4, mean_air_temp))
+```
+The mean air temperature is increasing with the years
+
+```{r}
+mean_join <- left_join(met, mean_lake)
+```
+
+
+```{r}
+ggplot() +
+  geom_point(data = mean_join, aes(mean_cover, mean_air_temp))
+```
+When the air temp is higher the ice cover tends to be lower
+
+
+```{r}
+sbs <- summarize_lake %>% 
+  filter(year4 >= 1970)
+```
+
+```{r}
+sbs %>% 
+  mutate(date = lubridate::yday(ice_off)) 
+```
+
+```{r}
+ggplot() +
+  geom_point(data = sbs, aes(year4, ice_duration))
+```
+
+The ice duration in decreasing as the years pass
